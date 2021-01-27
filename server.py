@@ -1,5 +1,6 @@
 #  coding: utf-8 
 import socketserver
+import os
 
 # Copyright 2013 Abram Hindle, Eddie Antonio Santos
 # 
@@ -28,12 +29,82 @@ import socketserver
 
 
 class MyWebServer(socketserver.BaseRequestHandler):
-    
+
     def handle(self):
         self.data = self.request.recv(1024).strip()
-        print ("Got a request of: %s\n" % self.data)
-        self.request.sendall(bytearray("OK",'utf-8'))
+        print(self.data)
+        args =  self.data.decode().split(" ")
+        self.method = args[0]
+        self.http = "HTTP/1.1 "
+        self.status_code = ""
+        self.content_type = ""
+        self.content = ""
+        
+        print("base server call")
 
+        self.directory = args[1]
+        print("directory requested: "+self.directory)
+        #self.actual_response = "test"
+        self.file_string = open("www/index.html","r").read()
+        self.css = open("www/base.css","r").read()
+        if(self.method == "GET"):
+            print("enter")
+            self.status_code,self.content_type,self.content = self.check_dir()
+            
+            # self.actual_response = "HTTP/1.1 200 OK"+"\r\n Content-Type: text/html\r\n\n"+self.file_string+"\r\n\r\n\n"
+            # self.request.sendall(self.actual_response.encode())
+            # print(self.actual_response)
+            # if(self.directory == "/base.css"):
+            #     self.actual_response = "HTTP/1.1 200 OK"+ \
+            #     "\r\n Content-Type: text/css\r\n\n"+self.css+"\r\n\r\n"
+            #     self.request.sendall(self.actual_response.encode())
+            #     print(self.actual_response)
+            self.actual_response = self.http + self.status_code + self.content_type + self.content
+            #self.actual_response = self.http + "405 Method Not Allowed" +"\r\n Content-Type: text/html\r\n"+"405 Method Not Allowed"+"\r\n\r\n"
+            print(self.actual_response)
+            self.request.sendall(self.actual_response.encode())
+        else:
+            self.actual_response = self.http + "405 Method Not Allowed" +"\r\n Content-Type: text/html\r\n"+"405 Method Not Allowed"+"\r\n\r\n"
+        
+
+        #self.actual_response = self.http + self.status_code + self.content_type + self.content
+        #self.actual_response = self.http + "405 Method Not Allowed" +"\r\n Content-Type: text/html\r\n"+"405 Method Not Allowed"+"\r\n\r\n"
+        #print(self.actual_response)
+        #self.request.sendall(self.actual_response.encode())
+    def check_dir(self):
+        #handle base dir or /index.html
+        path,req_file = os.path.split(self.directory)
+        #paths that start with / and dont end with /
+        if(path == "/"):
+            #redirect
+            if(req_file == "deep"):
+                return "301 Moved Permanently\r\n","Content-Type: text/html\r\n" + "Location: localhost:8080/deep/\r\n" , "\r\n\r\n"
+            #proper path
+            elif(req_file == "" or req_file == "index.html"):
+                data = open("www/index.html","r").read()
+                return "200 OK\r\n","Content-Type: text/html\r\n\n",data+"\r\n\r\n"
+            #css files
+            elif(req_file == "base.css"):
+                data = open("www/base.css","r").read()
+                return "200 OK\r\n","Content-Type: text/css\r\n\n",data+"\r\n\r\n"
+            #404
+            else:
+                return "404 Not found\r\n","Content-Type: text/html\r\n\n","\r\n\r\n"
+        #paths that are /deep/ or /deep/...
+        elif(path == "/deep"):
+            #proper path
+            if(req_file == "" or req_file == "index.html"):
+                data = open("www/deep/index.html","r").read()
+                return "200 OK\r\n","Content-Type: text/html\r\n\n",data+"\r\n\r\n"
+            elif(req_file == "deep.css"):
+                data = open("www/deep/deep.css","r").read()
+                return "200 OK\r\n","Content-Type: text/css\r\n\n",data+"\r\n\r\n"
+            else:
+                return "404 Not found\r\n","Content-Type: text/html\r\n\n","\r\n\r\n"
+        #404
+        else:
+            return "404 Not found\r\n","Content-Type: text/html\r\n\n","\r\n\r\n"
+        
 if __name__ == "__main__":
     HOST, PORT = "localhost", 8080
 
