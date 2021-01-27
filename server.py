@@ -32,23 +32,26 @@ class MyWebServer(socketserver.BaseRequestHandler):
 
     def handle(self):
         self.data = self.request.recv(1024).strip()
-        print(self.data)
+        #print(self.data)
+        
         args =  self.data.decode().split(" ")
+        #print(args)
         self.method = args[0]
         self.http = "HTTP/1.1 "
         self.status_code = ""
         self.content_type = ""
         self.content = ""
         
-        print("base server call")
-
+        #print("base server call")
+        
         self.directory = args[1]
-        print("directory requested: "+self.directory)
+        
+        #print("directory requested: "+self.directory)
         #self.actual_response = "test"
-        self.file_string = open("www/index.html","r").read()
-        self.css = open("www/base.css","r").read()
+        #self.file_string = open("www/index.html","r").read()
+        #self.css = open("www/base.css","r").read()
         if(self.method == "GET"):
-            print("enter")
+            #print("enter")
             self.status_code,self.content_type,self.content = self.check_dir()
             
             # self.actual_response = "HTTP/1.1 200 OK"+"\r\n Content-Type: text/html\r\n\n"+self.file_string+"\r\n\r\n\n"
@@ -61,11 +64,11 @@ class MyWebServer(socketserver.BaseRequestHandler):
             #     print(self.actual_response)
             self.actual_response = self.http + self.status_code + self.content_type + self.content
             #self.actual_response = self.http + "405 Method Not Allowed" +"\r\n Content-Type: text/html\r\n"+"405 Method Not Allowed"+"\r\n\r\n"
-            print(self.actual_response)
+            #print(self.actual_response)
             self.request.sendall(self.actual_response.encode())
         else:
             self.actual_response = self.http + "405 Method Not Allowed" +"\r\n Content-Type: text/html\r\n"+"405 Method Not Allowed"+"\r\n\r\n"
-        
+            self.request.sendall(self.actual_response.encode())
 
         #self.actual_response = self.http + self.status_code + self.content_type + self.content
         #self.actual_response = self.http + "405 Method Not Allowed" +"\r\n Content-Type: text/html\r\n"+"405 Method Not Allowed"+"\r\n\r\n"
@@ -75,11 +78,23 @@ class MyWebServer(socketserver.BaseRequestHandler):
         #handle base dir or /index.html
         path,req_file = os.path.split(self.directory)
         nonsense = path.split("/")
+        #print(nonsense[1])
+        #print(os.path.isdir(nonsense[1]))
         #paths that start with / and dont end with /
         if(path == "/"):
             #redirect
             if(req_file == "deep"):
-                return "301 Moved Permanently\r\n","Content-Type: text/html\r\n" + "Location: localhost:8080/deep/\r\n" , "\r\n\r\n"
+                quicky_html = '''
+                <DOCTYPE! html>
+                <html>
+                <body>
+                <b>WRONG URL SILLY</b>
+                 
+                <a href="deep/index.html">you want whats here</a>
+                </body>
+                </html>
+                '''
+                return "301 Moved Permanently\r\n","Content-Type: text/html\r\n\n" ,quicky_html+ "\r\n\r\n"
             #proper path
             elif(req_file == "" or req_file == "index.html"):
                 data = open("www/index.html","r").read()
@@ -94,27 +109,35 @@ class MyWebServer(socketserver.BaseRequestHandler):
         #paths that are /deep/ or /deep/...
         elif(path == "/deep"):
             #proper path
-            if(req_file == "" or ".html" in req_file):
-                for file in os.listdir("www/deep/"):
-                    if(file.endswith(".html")):
-                        print(file)
-                        data = open("www/deep/"+file,"r").read()
-                        return "200 OK\r\n","Content-Type: text/html\r\n\n",data+"\r\n\r\n"
+            # if(req_file == "" or ".html" in req_file):
+            #     for file in os.listdir("www/deep/"):
+            #         if(file.endswith(".html")):
+            #             #print(file)
+            #             data = open("www/deep/"+file,"r").read()
+            #             return "200 OK\r\n","Content-Type: text/html\r\n\n",data+"\r\n\r\n"
+            if(req_file == "" or req_file == "index.html"):
+                data = open("www/deep/index.html","r").read()
+                return "200 OK\r\n","Content-Type: text/html\r\n\n",data+"\r\n\r\n"
 
             elif(req_file == "deep.css"):
                 data = open("www/deep/deep.css","r").read()
                 return "200 OK\r\n","Content-Type: text/css\r\n\n",data+"\r\n\r\n"
             else:
                 return "404 Not found\r\n","Content-Type: text/html\r\n\n","\r\n\r\n"
-        #cheatsy doodle work around for variable directory shenanegains
-        elif(os.path.isdir(nonsense[1])):
-            if(req_file == "" or req_file == "index.html"):
+        #cheatsy doodle work around for variable directory shenanegains ;^)
+        elif(os.path.isdir("www/"+nonsense[1])):
+            #print()
+            if(req_file == ""): 
                 data = open("www/"+nonsense[1]+"/index.html","r").read()
+                return "200 OK\r\n","Content-Type: text/html\r\n\n",data+"\r\n\r\n"
+            elif(".html" in req_file):
+                data = open("www/"+nonsense[1]+"/"+req_file,"r").read()
                 return "200 OK\r\n","Content-Type: text/html\r\n\n",data+"\r\n\r\n"
             elif(".css" in req_file):
-                data = open("www/"+nonsense[1]+"/index.html","r").read()
-                return "200 OK\r\n","Content-Type: text/html\r\n\n",data+"\r\n\r\n"
-
+                data = open("www/"+nonsense[1]+"/"+req_file,"r").read()
+                return "200 OK\r\n","Content-Type: text/css\r\n\n",data+"\r\n\r\n"
+            else:
+                return "404 Not found\r\n","Content-Type: text/html\r\n\n","\r\n\r\n"
         #404
 
         else:
