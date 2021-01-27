@@ -18,6 +18,14 @@ server.py contains contributions from:
 * Eddie Antonio Santos
 * Jackson Z Chang
 * Mandy Meindersma 
+* Oran Rohoman
+
+Sources:
+Ma0:    https://stackoverflow.com/questions/3964681/find-all-files-in-a-directory-with-extension-txt-in-python 
+https://docs.python.org/2/library/os.html#os.listdir0
+https://docs.python.org/3/library/os.path.html
+guru99:    https://www.guru99.com/python-check-if-file-exists.html
+
 
 But the server.py example is derived from the python documentation
 examples thus some of the code is Copyright © 2001-2013 Python
