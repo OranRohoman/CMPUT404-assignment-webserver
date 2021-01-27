@@ -74,6 +74,7 @@ class MyWebServer(socketserver.BaseRequestHandler):
     def check_dir(self):
         #handle base dir or /index.html
         path,req_file = os.path.split(self.directory)
+        nonsense = path.split("/")
         #paths that start with / and dont end with /
         if(path == "/"):
             #redirect
@@ -93,15 +94,29 @@ class MyWebServer(socketserver.BaseRequestHandler):
         #paths that are /deep/ or /deep/...
         elif(path == "/deep"):
             #proper path
-            if(req_file == "" or req_file == "index.html"):
-                data = open("www/deep/index.html","r").read()
-                return "200 OK\r\n","Content-Type: text/html\r\n\n",data+"\r\n\r\n"
+            if(req_file == "" or ".html" in req_file):
+                for file in os.listdir("www/deep/"):
+                    if(file.endswith(".html")):
+                        print(file)
+                        data = open("www/deep/"+file,"r").read()
+                        return "200 OK\r\n","Content-Type: text/html\r\n\n",data+"\r\n\r\n"
+
             elif(req_file == "deep.css"):
                 data = open("www/deep/deep.css","r").read()
                 return "200 OK\r\n","Content-Type: text/css\r\n\n",data+"\r\n\r\n"
             else:
                 return "404 Not found\r\n","Content-Type: text/html\r\n\n","\r\n\r\n"
+        #cheatsy doodle work around for variable directory shenanegains
+        elif(os.path.isdir(nonsense[1])):
+            if(req_file == "" or req_file == "index.html"):
+                data = open("www/"+nonsense[1]+"/index.html","r").read()
+                return "200 OK\r\n","Content-Type: text/html\r\n\n",data+"\r\n\r\n"
+            elif(".css" in req_file):
+                data = open("www/"+nonsense[1]+"/index.html","r").read()
+                return "200 OK\r\n","Content-Type: text/html\r\n\n",data+"\r\n\r\n"
+
         #404
+
         else:
             return "404 Not found\r\n","Content-Type: text/html\r\n\n","\r\n\r\n"
         
