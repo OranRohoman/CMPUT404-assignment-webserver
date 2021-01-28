@@ -115,8 +115,8 @@ class MyWebServer(socketserver.BaseRequestHandler):
                 data = open("www/index.html","r").read()
                 return "200 OK\r\n","Content-Type: text/html\r\n\n",data+"\r\n\r\n"
             #css files
-            elif(req_file == "base.css"):
-                data = open("www/base.css","r").read()
+            elif(".css" in req_file and os.path.exists("www/"+req_file)):
+                data = open("www/"+req_file,"r").read()
                 return "200 OK\r\n","Content-Type: text/css\r\n\n",data+"\r\n\r\n"
             #404
             else:
@@ -134,8 +134,8 @@ class MyWebServer(socketserver.BaseRequestHandler):
                 data = open("www/deep/index.html","r").read()
                 return "200 OK\r\n","Content-Type: text/html\r\n\n",data+"\r\n\r\n"
 
-            elif(req_file == "deep.css"):
-                data = open("www/deep/deep.css","r").read()
+            elif(".css" in req_file and os.path.exists("www/deep/"+req_file)):
+                data = open("www/deep/"+req_file,"r").read()
                 return "200 OK\r\n","Content-Type: text/css\r\n\n",data+"\r\n\r\n"
             else:
                 return "404 Not found\r\n","Content-Type: text/html\r\n\n","\r\n\r\n"
