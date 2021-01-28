@@ -43,8 +43,8 @@ class MyWebServer(socketserver.BaseRequestHandler):
         self.content = ""
         
         #print("base server call")
-        
-        self.directory = args[1]
+        if(len(args)>1):
+            self.directory = args[1]
         
         #print("directory requested: "+self.directory)
         #self.actual_response = "test"
@@ -81,22 +81,37 @@ class MyWebServer(socketserver.BaseRequestHandler):
         #print(nonsense[1])
         #print(os.path.isdir(nonsense[1]))
         #paths that start with / and dont end with /
+        # print("--------------------------")
+        # print("path: "+path)
+        # print("file: "+req_file)
+        # print("directory: www"+self.directory)
+        # print("nonesense: ",nonsense)
+        # print("--------------------------")
         if(path == "/"):
             #redirect
-            if(req_file == "deep"):
+            
+
+            if(os.path.isdir("www/"+req_file) and len(req_file) > 0):
                 quicky_html = '''
                 <DOCTYPE! html>
                 <html>
                 <body>
                 <b>WRONG URL SILLY</b>
                  
-                <a href="deep/index.html">you want whats here</a>
+                <a href="'''+req_file+'''/index.html">you want whats here</a>
                 </body>
                 </html>
                 '''
                 return "301 Moved Permanently\r\n","Content-Type: text/html\r\n\n" ,quicky_html+ "\r\n\r\n"
             #proper path
-            elif(req_file == "" or req_file == "index.html"):
+            elif(req_file == ""):
+                for file in os.listdir("www/"+path):
+                    if(file.endswith(".html")):
+                        name = os.fsdecode(file)
+                        #print(name)
+                        data = open("www/"+path+"/"+name,"r").read()
+                        return "200 OK\r\n","Content-Type: text/html\r\n\n",data+"\r\n\r\n"
+            elif(req_file == "index.html"):
                 data = open("www/index.html","r").read()
                 return "200 OK\r\n","Content-Type: text/html\r\n\n",data+"\r\n\r\n"
             #css files
@@ -124,22 +139,47 @@ class MyWebServer(socketserver.BaseRequestHandler):
                 return "200 OK\r\n","Content-Type: text/css\r\n\n",data+"\r\n\r\n"
             else:
                 return "404 Not found\r\n","Content-Type: text/html\r\n\n","\r\n\r\n"
-        #cheatsy doodle work around for variable directory shenanegains ;^)
-        elif(os.path.isdir("www/"+nonsense[1])):
-            #print()
-            if(req_file == ""): 
-                data = open("www/"+nonsense[1]+"/index.html","r").read()
-                return "200 OK\r\n","Content-Type: text/html\r\n\n",data+"\r\n\r\n"
+        #nested edge cases (hardcore/deep, hardcore/deep/, hardcore/deep/index.html or sads.css, hardcore)
+        elif(os.path.isdir("www"+path)):
+            #proper nested
+            if(req_file == ""):
+                for file in os.listdir("www/"+path):
+                    if(file.endswith(".html")):
+                        name = os.fsdecode(file)
+                        #print(name)
+                        data = open("www/"+path+"/"+name,"r").read()
+                        return "200 OK\r\n","Content-Type: text/html\r\n\n",data+"\r\n\r\n"
+        
             elif(".html" in req_file):
-                data = open("www/"+nonsense[1]+"/"+req_file,"r").read()
+                data = open("www"+path+"/"+req_file,"r").read()
                 return "200 OK\r\n","Content-Type: text/html\r\n\n",data+"\r\n\r\n"
             elif(".css" in req_file):
-                data = open("www/"+nonsense[1]+"/"+req_file,"r").read()
+                data = open("www"+path+"/"+req_file,"r").read()
                 return "200 OK\r\n","Content-Type: text/css\r\n\n",data+"\r\n\r\n"
+            elif(os.path.isdir("www"+path) and req_file == ""):
+                for file in os.listdir("www/"+path):
+                    if(file.endswith(".html")):
+                        name = os.fsdecode(file)
+                        #print(name)
+                        data = open("www/"+nonsense[1]+"/"+name,"r").read()
+                        return "200 OK\r\n","Content-Type: text/html\r\n\n",data+"\r\n\r\n"
+            #redirect            
+            elif(os.path.isdir("www"+path +"/"+req_file)):
+                #print("entering")
+                quicky_html = '''
+                <DOCTYPE! html>
+                <html>
+                <body>
+                <b>WRONG URL SILLY</b>
+                 
+                <a href="'''+path +"/"+req_file+'''/index.html">you want whats here</a>
+                </body>
+                </html>
+                '''
+                return "301 Moved Permanently\r\n","Content-Type: text/html\r\n\n" ,quicky_html+ "\r\n\r\n"
             else:
                 return "404 Not found\r\n","Content-Type: text/html\r\n\n","\r\n\r\n"
         #404
-
         else:
             return "404 Not found\r\n","Content-Type: text/html\r\n\n","\r\n\r\n"
         
