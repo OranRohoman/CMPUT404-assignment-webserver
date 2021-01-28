@@ -26,6 +26,11 @@ import os
 # run: python freetests.py
 
 # try: curl -v -X GET http://127.0.0.1:8080/
+# Sources:
+# Ma0:    https://stackoverflow.com/questions/3964681/find-all-files-in-a-directory-with-extension-txt-in-python 
+# https://docs.python.org/2/library/os.html#os.listdir0
+# https://docs.python.org/3/library/os.path.html
+# guru99:    https://www.guru99.com/python-check-if-file-exists.html
 
 
 class MyWebServer(socketserver.BaseRequestHandler):
@@ -41,56 +46,26 @@ class MyWebServer(socketserver.BaseRequestHandler):
         self.status_code = ""
         self.content_type = ""
         self.content = ""
-        
-        #print("base server call")
         if(len(args)>1):
             self.directory = args[1]
-        
-        #print("directory requested: "+self.directory)
-        #self.actual_response = "test"
-        #self.file_string = open("www/index.html","r").read()
-        #self.css = open("www/base.css","r").read()
+
         if(self.method == "GET"):
-            #print("enter")
             self.status_code,self.content_type,self.content = self.check_dir()
-            
-            # self.actual_response = "HTTP/1.1 200 OK"+"\r\n Content-Type: text/html\r\n\n"+self.file_string+"\r\n\r\n\n"
-            # self.request.sendall(self.actual_response.encode())
-            # print(self.actual_response)
-            # if(self.directory == "/base.css"):
-            #     self.actual_response = "HTTP/1.1 200 OK"+ \
-            #     "\r\n Content-Type: text/css\r\n\n"+self.css+"\r\n\r\n"
-            #     self.request.sendall(self.actual_response.encode())
-            #     print(self.actual_response)
             self.actual_response = self.http + self.status_code + self.content_type + self.content
-            #self.actual_response = self.http + "405 Method Not Allowed" +"\r\n Content-Type: text/html\r\n"+"405 Method Not Allowed"+"\r\n\r\n"
-            #print(self.actual_response)
+           
             self.request.sendall(self.actual_response.encode())
         else:
             self.actual_response = self.http + "405 Method Not Allowed" +"\r\n Content-Type: text/html\r\n"+"405 Method Not Allowed"+"\r\n\r\n"
             self.request.sendall(self.actual_response.encode())
 
-        #self.actual_response = self.http + self.status_code + self.content_type + self.content
-        #self.actual_response = self.http + "405 Method Not Allowed" +"\r\n Content-Type: text/html\r\n"+"405 Method Not Allowed"+"\r\n\r\n"
-        #print(self.actual_response)
-        #self.request.sendall(self.actual_response.encode())
+       
     def check_dir(self):
         #handle base dir or /index.html
         path,req_file = os.path.split(self.directory)
         nonsense = path.split("/")
-        #print(nonsense[1])
-        #print(os.path.isdir(nonsense[1]))
-        #paths that start with / and dont end with /
-        # print("--------------------------")
-        # print("path: "+path)
-        # print("file: "+req_file)
-        # print("directory: www"+self.directory)
-        # print("nonesense: ",nonsense)
-        # print("--------------------------")
+       
         if(path == "/"):
             #redirect
-            
-
             if(os.path.isdir("www/"+req_file) and len(req_file) > 0):
                 quicky_html = '''
                 <DOCTYPE! html>
@@ -124,12 +99,6 @@ class MyWebServer(socketserver.BaseRequestHandler):
         #paths that are /deep/ or /deep/...
         elif(path == "/deep"):
             #proper path
-            # if(req_file == "" or ".html" in req_file):
-            #     for file in os.listdir("www/deep/"):
-            #         if(file.endswith(".html")):
-            #             #print(file)
-            #             data = open("www/deep/"+file,"r").read()
-            #             return "200 OK\r\n","Content-Type: text/html\r\n\n",data+"\r\n\r\n"
             if(req_file == "" or req_file == "index.html"):
                 data = open("www/deep/index.html","r").read()
                 return "200 OK\r\n","Content-Type: text/html\r\n\n",data+"\r\n\r\n"
